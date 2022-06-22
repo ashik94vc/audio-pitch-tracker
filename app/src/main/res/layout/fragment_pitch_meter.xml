@@ -13,34 +13,31 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="36dp"
+            android:textSize="32sp"
             android:gravity="center"
             app:spark_lineColor="@color/design_default_color_primary"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toTopOf="@id/process_id"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/card"
+            app:layout_constraintBaseline_toBaselineOf="parent"
             app:layout_constraintStart_toStartOf="parent"/>
+
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card"
             android:layout_width="match_parent"
-            app:layout_constraintBottom_toTopOf="@id/process_id"
-            app:layout_constraintTop_toBottomOf="@id/pitch_data"
+            android:layout_height="wrap_content"
             android:background="@color/design_default_color_primary_variant"
-            android:layout_height="wrap_content">
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent">
             <com.robinhood.spark.SparkView
                 android:id="@+id/audio_data"
                 android:layout_width="wrap_content"
                 android:layout_height="300dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="36dp"
-                app:spark_scrubEnabled="true"
-                app:spark_lineColor="@color/design_default_color_primary" />
+                app:spark_lineColor="@color/design_default_color_primary"
+                app:spark_scrubEnabled="true" />
         </com.google.android.material.card.MaterialCardView>
-        <TextView
-            android:id="@+id/process_id"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

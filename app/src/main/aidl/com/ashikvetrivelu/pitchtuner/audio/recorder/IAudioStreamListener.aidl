@@ -6,4 +6,5 @@ package com.ashikvetrivelu.pitchtuner.audio.recorder;
 interface IAudioStreamListener {
     void onReceiveData(in byte[] dataBuffer);
     void onReceiveSampleMetaData(in double[] fourierFrequencies);
+    void onReceiveFrequency(double data);
 }

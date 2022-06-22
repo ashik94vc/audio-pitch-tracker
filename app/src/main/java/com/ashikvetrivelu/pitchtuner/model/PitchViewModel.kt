@@ -6,6 +6,7 @@ class PitchViewModel : ViewModel() {
 
     val processId = MutableLiveData<String>()
     val fourierFrequencyData = MutableLiveData<DoubleArray>()
+    val frequency = MutableLiveData<Double>()
 
     init {
         processId.value = "Process Not Attached!"

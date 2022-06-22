@@ -106,6 +106,12 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
+                override fun onReceiveFrequency(data: Double) {
+                    MainScope().launch {
+                        viewModel.frequency.value = data
+                    }
+                }
+
             }
             audioRecorderService.startAudioStream(audioStreamListener)
             isServiceBound = true

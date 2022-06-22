@@ -45,13 +45,14 @@ class PitchMeterFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        processModel.processId.observe(viewLifecycleOwner) {
-            logger.info("PID changed in viewModel {}", it)
-            binding.processId.text = it
-        }
         processModel.fourierFrequencyData.observe(viewLifecycleOwner) {
             binding.audioData.adapter = FrequencyVisualizerAdapter(it)
         }
+
+        processModel.frequency.observe(viewLifecycleOwner) {
+            binding.pitchData.text = it.toString()
+        }
+
     }
 
 

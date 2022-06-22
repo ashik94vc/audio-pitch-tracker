@@ -56,18 +56,18 @@ class AudioRecorderService : Service() {
         override fun startAudioStream(listener: IAudioStreamListener?) {
             audioStreamListener = listener
             if (AudioRecord.RECORDSTATE_RECORDING == audioRecord.recordingState) {
-                var audioBuffer = ByteArray(bufferSize * 10)
-                val increment = (2 * PI * 440.0 / SAMPLE_RATE).toFloat()
+                var audioBuffer = ByteArray(SAMPLE_RATE)
+                val increment = (2 * PI * 940.0 / SAMPLE_RATE).toFloat()
                 val shortArray = ShortArray(SAMPLE_RATE/2)
                 val floatArray = FloatArray(SAMPLE_RATE/2)
                 CoroutineScope(IO).launch {
                     while (true) {
-//                        audioRecord.read(audioBuffer, 0, bufferSize, AudioRecord.READ_BLOCKING)
-                        audioBuffer = generateSineWave(increment, shortArray, floatArray)
+                        audioRecord.read(audioBuffer, 0, SAMPLE_RATE, AudioRecord.READ_BLOCKING)
+//                        audioBuffer = generateSineWave(increment, shortArray, floatArray)
                         val fundamentalFrequency = getFundamentalFrequency(audioBuffer)
                         logger.info("frequency={}", fundamentalFrequency)
                         audioStreamListener?.onReceiveData(audioBuffer)
-//                        audioBuffer = AudioSignalProcessor.noiseReduce(audioBuffer, 16, ByteOrder.nativeOrder())
+                        audioStreamListener?.onReceiveFrequency(fundamentalFrequency)
                     }
                 }
             }
@@ -96,12 +96,11 @@ class AudioRecorderService : Service() {
     }
 
     private fun getFundamentalFrequency(data: ByteArray) : Double {
-        var dataDouble = DataStreamUtil.convertBytesToDouble(data, 16, ByteOrder.nativeOrder())
+        var dataDouble = DataStreamUtil.convertBytesToDouble(data, 16, ByteOrder.LITTLE_ENDIAN)
 
         val sampleSize = dataDouble.size
         val desiredSampleSize = AudioUtil.findBestBufferSize(sampleSize)
         dataDouble = DoubleArray(desiredSampleSize - sampleSize){0.0}.plus(dataDouble)
-
         val fourierData = ComplexDouble.fromRealDoubleArray(dataDouble)
         FastFourierTransform.calcAndApplyBlackmanWindow(fourierData)
         val fundamentalArray = FastFourierTransform.performFourierTransform(fourierData)
@@ -112,10 +111,11 @@ class AudioRecorderService : Service() {
         val magnitude = DoubleArray(sampleCount)
 
         for (i in fundamentalArray.indices) {
-            val real = (fundamentalArray[i].real / sampleCount).pow(2)
-            val imaginary = (fundamentalArray[i].imaginary / sampleCount).pow(2)
-            magnitude[i] = log10(sqrt(real * imaginary))
+            magnitude[i] = log10(fundamentalArray[i].abs())
         }
+
+        audioStreamListener?.onReceiveSampleMetaData(magnitude)
+
 
         //Bandpass 50 - 18000Hz
         for (i in 0 until ceil(50/fourierFrequency).toInt()) {
@@ -125,12 +125,16 @@ class AudioRecorderService : Service() {
             magnitude[i] = Double.NEGATIVE_INFINITY
         }
 
-        audioStreamListener?.onReceiveSampleMetaData(magnitude)
 
-        val hps = AudioSignalProcessor.harmonicProductSpectrum(magnitude, 3)
+        val hps = AudioSignalProcessor.harmonicProductSpectrum(magnitude, 0)
         var maxIndex = 0
-        hps.indices.maxByOrNull { hps[it] }?.let { maxIndex = it }
-
+        var maxValue = Double.MIN_VALUE
+        for ( i in hps.indices) {
+            if (maxValue < hps[i]) {
+                maxValue = hps[i]
+                maxIndex = i
+            }
+        }
 
         logger.info("fundamentalIndex={} fourierFrequency={} sampleCount={} sampleSize={}", maxIndex, fourierFrequency, sampleCount, sampleSize)
         return fourierFrequency * maxIndex
