@@ -1,17 +1,30 @@
 package com.ashikvetrivelu.pitchtuner.util
 
 import org.slf4j.LoggerFactory
+import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
 object FastFourierTransform {
 
-    val logger = LoggerFactory.getLogger(javaClass)
+    fun calcAndApplyBlackmanWindow(data: Array<ComplexDouble>) {
+        val sampleSize = data.size
+        val window = DoubleArray(sampleSize)
+        for (i in window.indices) {
+            window[i] = (0.42 - (0.5 * cos(2 * PI * i / (sampleSize - 1)))
+                    + (0.08 * cos(4 * PI * i / (sampleSize - 1))))
+            data[i].real = window[i] * data[i].real
+            data[i].imaginary = window[i] * data[i].imaginary
+        }
+    }
 
     fun performFourierTransform(data: Array<ComplexDouble>): Array<ComplexDouble> {
 
         val size = data.size
 
+        if (size == 0) {
+            return emptyArray()
+        }
         if (size == 1) {
             return arrayOf(data[0])
         }

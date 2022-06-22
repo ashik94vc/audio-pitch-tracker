@@ -102,7 +102,6 @@ class MainActivity : AppCompatActivity() {
 
                 override fun onReceiveSampleMetaData(fourierFrequencies: DoubleArray?) {
                     MainScope().launch {
-                        logger.info("Data received {}", fourierFrequencies)
                         viewModel.fourierFrequencyData.value = fourierFrequencies
                     }
                 }

@@ -6,7 +6,7 @@ import kotlin.math.*
     Class to represent complex numbers as two "real" doubles
     Complex Number is given by Z = a + bi where a is the real part and b is the imaginary
  */
-data class ComplexDouble(val real: Double, val imaginary: Double) {
+data class ComplexDouble(var real: Double, var imaginary: Double) {
 
     /**
         Returns the inverse square root of real and imaginary values.
@@ -60,6 +60,8 @@ data class ComplexDouble(val real: Double, val imaginary: Double) {
         fun fromRealDoubleArray(data: DoubleArray) = Array<ComplexDouble>(data.size) {
             ComplexDouble(data[it], 0.0)
         }
+
+        fun toRealDoubleArray(data: Array<ComplexDouble>) = data.map { it.abs() }.toDoubleArray()
     }
 
 }

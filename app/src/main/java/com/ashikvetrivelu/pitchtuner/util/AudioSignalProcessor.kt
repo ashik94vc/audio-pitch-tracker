@@ -1,39 +1,51 @@
 package com.ashikvetrivelu.pitchtuner.util
 
 import com.ashikvetrivelu.pitchtuner.aspect.PerfLogMonitor
+import java.nio.ByteOrder
+import kotlin.math.sqrt
 
 object AudioSignalProcessor {
 
+    private fun findRMSAverage(data: DoubleArray): Double {
+        val sum = data.sumOf { it * it }
+        val meanSquare = sum/data.size
+        return sqrt(meanSquare)
+    }
+
+    fun normalizeData(data: DoubleArray): DoubleArray {
+        val rmsThreshold = findRMSAverage(data)
+        return data.map { if (it < rmsThreshold) 0.0 else it }.toDoubleArray()
+    }
+
+    fun noiseReduce(data: ByteArray, sampleRate: Int, byteOrder: ByteOrder): ByteArray {
+        var doubleArray = DataStreamUtil.convertBytesToDouble(data, sampleRate, byteOrder)
+        doubleArray = normalizeData(doubleArray)
+        return DataStreamUtil.convertDoubleToBytes(doubleArray, sampleRate)
+    }
+
     @PerfLogMonitor
-    fun harmonicProductSpectrum(sample: Array<ComplexDouble>, sampleSize: Int): Int {
-        val data = Array(sampleSize) {
-            Array(sample.size / sampleSize) {
-                ComplexDouble(0.0, 0.0)
+    fun harmonicProductSpectrum(sample: DoubleArray, order: Int): DoubleArray {
+        val hps = DoubleArray(sample.size)
+        val hpsLength = sample.size / (order + 1)
+        for (i in sample.indices) {
+            if ( i < hpsLength) {
+                hps[i] = sample[i]
+            } else {
+                hps[i] = Double.NEGATIVE_INFINITY
             }
         }
-        for (i in 0 until sampleSize) {
-            for (j in 0 until data[0].size)
-                data[i][j] = sample[j * (i + 1)]
-        }
-        val result = Array(sample.size / sampleSize) {
-            ComplexDouble(0.0, 0.0)
-        }
 
-        for (i in result.indices) {
-            var temp = ComplexDouble(1.0, 0.0)
-            for (j in 0 until sampleSize) {
-                temp = temp.multiply(data[j][i])
+        for (harmonic in 1..order) {
+            val downSamplingFactor = harmonic + 1
+            for (index in 0 until hpsLength) {
+                var avg: Double = 0.0
+                for (i in 0 until downSamplingFactor) {
+                    avg += sample[index*downSamplingFactor + i]
+                }
+                hps[index] += avg / downSamplingFactor
             }
-            result[i] = temp
         }
-
-        var max = Double.MIN_VALUE
-        var maxIdx = -1
-        result.map { it.abs() }.forEachIndexed {idx, value -> if (value > max ) {
-            maxIdx = idx
-            max = value
-        }}
-        return maxIdx
+        return hps
     }
 
 }

@@ -50,7 +50,6 @@ class PitchMeterFragment : Fragment() {
             binding.processId.text = it
         }
         processModel.fourierFrequencyData.observe(viewLifecycleOwner) {
-            logger.info("AudioData={}", it)
             binding.audioData.adapter = FrequencyVisualizerAdapter(it)
         }
     }
